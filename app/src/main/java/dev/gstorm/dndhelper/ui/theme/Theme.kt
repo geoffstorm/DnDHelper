@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import dev.gstorm.dndhelper.Contrast
+import dev.gstorm.dndhelper.DarkMode
 
 /*
 Built with https://material-foundation.github.io/material-theme-builder/
@@ -267,51 +269,50 @@ val unspecified_scheme = ColorFamily(
     Color.Unspecified, Color.Unspecified, Color.Unspecified, Color.Unspecified
 )
 
-enum class ContrastSetting {
-    Default,
-    Medium,
-    High
-}
-
 @Composable
 fun DnDHelperTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkMode: DarkMode = DarkMode.System,
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = false,
-    contrastSetting: ContrastSetting = ContrastSetting.Default,
+    contrast: Contrast = Contrast.Default,
     content: @Composable () -> Unit
 ) {
-  val colorScheme = when {
-      dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-          val context = LocalContext.current
-          if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-      }
-      
-      darkTheme -> when (contrastSetting) {
-          ContrastSetting.Default -> darkScheme
-          ContrastSetting.Medium -> mediumContrastDarkColorScheme
-          ContrastSetting.High -> highContrastDarkColorScheme
-      }
-
-      else -> when (contrastSetting) {
-          ContrastSetting.Default -> lightScheme
-          ContrastSetting.Medium -> mediumContrastLightColorScheme
-          ContrastSetting.High -> highContrastLightColorScheme
-      }
-  }
-  val view = LocalView.current
-  if (!view.isInEditMode) {
-    SideEffect {
-      val window = (view.context as Activity).window
-      window.statusBarColor = colorScheme.primary.toArgb()
-      WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+    val darkTheme = when (darkMode) {
+        DarkMode.System, DarkMode.UNRECOGNIZED -> isSystemInDarkTheme()
+        DarkMode.Enabled -> true
+        DarkMode.Disabled -> false
     }
-  }
+    val colorScheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            val context = LocalContext.current
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
 
-  MaterialTheme(
-    colorScheme = colorScheme,
-    typography = Typography,
-    content = content
-  )
+        darkTheme -> when (contrast) {
+            Contrast.Default, Contrast.UNRECOGNIZED -> darkScheme
+            Contrast.Medium -> mediumContrastDarkColorScheme
+            Contrast.High -> highContrastDarkColorScheme
+        }
+
+        else -> when (contrast) {
+            Contrast.Default, Contrast.UNRECOGNIZED -> lightScheme
+            Contrast.Medium -> mediumContrastLightColorScheme
+            Contrast.High -> highContrastLightColorScheme
+        }
+    }
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = colorScheme.primary.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+        }
+    }
+
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
+    )
 }
 

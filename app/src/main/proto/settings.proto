@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_package = "dev.gstorm.dndhelper";
+option java_multiple_files = true;
+
+enum Contrast {
+  Default = 0;
+  Medium = 1;
+  High = 2;
+}
+
+enum DarkMode {
+  System = 0;
+  Enabled = 1;
+  Disabled = 2;
+}
+
+message AppSettings {
+  bool dynamic_color_enabled = 1;
+  DarkMode dark_mode = 2;
+  Contrast contrast = 3;
+}
