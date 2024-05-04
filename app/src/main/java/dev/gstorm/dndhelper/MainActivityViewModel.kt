@@ -5,13 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.gstorm.dndhelper.domain.settings.ReadSettingsUseCase
-import dev.gstorm.dndhelper.domain.settings.UpdateSettingsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// This is currently identical to [SettingsUiState], but is meant to remain this size if more
+// settings are added to the [SettingsUiState] that are not theming related.
 data class MainActivityUiState(
     val isDynamicColorEnabled: Boolean,
     val darkMode: DarkMode,
@@ -22,7 +23,6 @@ data class MainActivityUiState(
 class MainActivityViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val readSettingsUseCase: ReadSettingsUseCase,
-    private val writeSettingsUseCase: UpdateSettingsUseCase  // TODO testing only
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
         MainActivityUiState(
@@ -37,53 +37,19 @@ class MainActivityViewModel @Inject constructor(
         observeUiState()
     }
 
-    fun toggleDynamicColor() {
-        setDynamicColorEnabled(!_uiState.value.isDynamicColorEnabled)
-    }
-
-    fun cycleDarkMode() {
-        val current = _uiState.value.darkMode
-        val index = current.number
-        val next = (index + 1) % 3
-        setDarkMode(DarkMode.forNumber(next))
-    }
-
-    fun cycleContrast() {
-        val current = _uiState.value.contrast
-        val index = current.number
-        val next = (index + 1) % 3
-        setContrast(Contrast.forNumber(next))
-    }
-
-    private fun setDynamicColorEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            writeSettingsUseCase.setDynamicColorEnabled(enabled)
-        }
-    }
-
-    private fun setDarkMode(darkMode: DarkMode) {
-        viewModelScope.launch {
-            writeSettingsUseCase.setDarkMode(darkMode)
-        }
-    }
-
-    private fun setContrast(contrast: Contrast) {
-        viewModelScope.launch {
-            writeSettingsUseCase.setContrast(contrast)
-        }
-    }
-
     private fun observeUiState() {
         viewModelScope.launch {
-            combine(
-                readSettingsUseCase.observeDynamicColorEnabled(),
-                readSettingsUseCase.observeDarkMode(),
-                readSettingsUseCase.observeContrast()
-            ) { isDynamicColorEnabled, darkMode, contrast ->
-                MainActivityUiState(isDynamicColorEnabled, darkMode, contrast)
-            }.collect {
-                _uiState.value = it
-            }
+            readSettingsUseCase()
+                .map {
+                    MainActivityUiState(
+                        isDynamicColorEnabled = it.isDynamicColorEnabled,
+                        darkMode = it.darkMode,
+                        contrast = it.contrast
+                    )
+                }
+                .collect {
+                    _uiState.value = it
+                }
         }
     }
 }

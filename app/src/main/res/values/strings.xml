@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">DnDHelper</string>
+    <string name="nav_title_characters">Characters</string>
+    <string name="nav_title_encounters">Encounters</string>
+    <string name="nav_title_settings">Settings</string>
 </resources>
