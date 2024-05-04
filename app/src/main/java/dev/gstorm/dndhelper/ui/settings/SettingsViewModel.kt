@@ -33,22 +33,22 @@ class SettingsViewModel @Inject constructor(
         observeUiState()
     }
 
-    fun toggleDynamicColor() {
-        setDynamicColorEnabled(!_uiState.value.isDynamicColorEnabled)
+    fun setDynamicColorEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            writeSettingsUseCase.setDynamicColorEnabled(enabled)
+        }
     }
 
-    fun cycleDarkMode() {
-        val current = _uiState.value.darkMode
-        val index = current.number
-        val next = (index + 1) % 3
-        setDarkMode(DarkMode.forNumber(next))
+    fun setDarkMode(darkMode: DarkMode) {
+        viewModelScope.launch {
+            writeSettingsUseCase.setDarkMode(darkMode)
+        }
     }
 
-    fun cycleContrast() {
-        val current = _uiState.value.contrast
-        val index = current.number
-        val next = (index + 1) % 3
-        setContrast(Contrast.forNumber(next))
+    fun setContrast(contrast: Contrast) {
+        viewModelScope.launch {
+            writeSettingsUseCase.setContrast(contrast)
+        }
     }
 
     private fun observeUiState() {
@@ -56,24 +56,6 @@ class SettingsViewModel @Inject constructor(
             readSettingsUseCase().collect {
                 _uiState.value = it
             }
-        }
-    }
-
-    private fun setDynamicColorEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            writeSettingsUseCase.setDynamicColorEnabled(enabled)
-        }
-    }
-
-    private fun setDarkMode(darkMode: DarkMode) {
-        viewModelScope.launch {
-            writeSettingsUseCase.setDarkMode(darkMode)
-        }
-    }
-
-    private fun setContrast(contrast: Contrast) {
-        viewModelScope.launch {
-            writeSettingsUseCase.setContrast(contrast)
         }
     }
 }
